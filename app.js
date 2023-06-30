@@ -1,17 +1,19 @@
-const app = require('express')();
+const express = require('express')
+const app = express()
+var path = require('path')
 
-const host = '127.0.0.1';
-const port = 7000;
+var mainRouter = require('./routers/mainRouter')
 
-app.set('views', './views');
-app.set('view engine', 'pug');
+const host = '127.0.0.1'
+const port = 7000
 
+app.use(express.static('css'))
+app.set('views', path.join(__dirname, './views') )
+app.set('view engine', 'pug')
 
-
-app.get('/', (req, res) => {
-    res.render('main', { title: 'Greetings from Pug' });
-});
+app.use(express.static(path.join(__dirname, './public')))
+app.use('/', mainRouter)
 
 app.listen(port, host, function () {
-    console.log(`Server listens http://${host}:${port}`);
-});
+    console.log(`Server listens http://${host}:${port}`)
+})
