@@ -3,7 +3,59 @@ head
 title=title 
 style 
 link(rel='stylesheet', href='w3.css', type='text/css')
+link(rel='stylesheet', href='preloader.css', type='text/css')
 script(src="jquery.js")
+script.
+      function hidePreloader() {
+        document.getElementById('preloader').style.display = 'none';
+      }
+      window.onload = function() {
+        setTimeout(hidePreloader, 10000);
+      }
 body
-div.w3-panel.w3-red
-    p Test
+#preloader
+  .loader
+
+
+div.w3-panel.w3-light-gray
+    div.div.w3-custom-grid
+        div.w3-button.w3-round-xxlarge.w3-margin.w3-pale-green(style='width: 12%;')
+            p Додати запис
+        div.w3-button.w3-round-xxlarge.w3-margin.w3-pale-red(style='width: 12%;')
+            p Видалити запис
+        div.w3-button.w3-round-xxlarge.w3-margin.w3-pale-yellow(style='width: 12%;')
+            p Редагувати запис
+        div.w3-button.w3-round-xxlarge.w3-margin.w3-right(style='width: 40%;')
+            div.w3-input.w3-border.w3-padding
+                input(type='text', placeholder='Пошук...', style='width: 100%;') 
+div.w3-table-all.w3-display-middle.w3-threequarter
+    table(style='width: 100%;')
+        thead
+            tr
+                th Прізвище
+                th Ім'я
+                th По-Батькові
+                th Організація
+                th Відділ
+                th Номер телефону
+                th E-mail
+                th Дата народження
+        tbody
+            tr
+                td 1
+                td 2
+                td 3
+                td 4
+                td 5
+                td 6
+                td 7
+                td 8
+            tr
+                td 1
+                td 2
+                td 3
+                td 4
+                td 5
+                td 6
+                td 7
+                td 8
