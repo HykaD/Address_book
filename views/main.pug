@@ -19,12 +19,87 @@ body
 
 div.w3-panel.w3-light-gray
     div.div.w3-custom-grid
-        div.w3-button.w3-round-xxlarge.w3-margin.w3-pale-green(style='width: 12%;')
+        button.w3-button.w3-round-xxlarge.w3-margin.w3-pale-green(style='width: 12%;', onclick="document.getElementById('id01').style.display='block'")
             p Додати запис
-        div.w3-button.w3-round-xxlarge.w3-margin.w3-pale-red(style='width: 12%;')
+        div#id01.w3-modal
+            div.w3-modal-content
+                div.w3-container
+                    span.w3-button.w3-display-topright(onclick="document.getElementById('id01').style.display='none'") &times;
+                    form.w3-container.w3-card-4(action="/action_page.php")
+                        h2.w3-text-blue Додавання запису
+                        p Форма для заповнення нового запису в довідник
+                        p
+                            label.w3-text-blue(for="last") Прізвище
+                            input.w3-input.w3-border(name="last", type="text")
+                        p
+                            label.w3-text-blue(for="first") Ім'я
+                            input.w3-input.w3-border(name="first", type="text")
+                        p
+                            label.w3-text-blue(for="father") По батькові
+                            input.w3-input.w3-border(name="father", type="text")
+                        p
+                            label.w3-text-blue(for="org") Організація
+                            input.w3-input.w3-border(name="org", type="text")
+                        p
+                            label.w3-text-blue(for="part") Відділ
+                            input.w3-input.w3-border(name="part", type="text")
+                        p
+                            label.w3-text-blue(for="phone") Номер телефону
+                            input.w3-input.w3-border(name="phone", type="text")
+                        p
+                            label.w3-text-blue(for="main") E-mail
+                            input.w3-input.w3-border(name="mail", type="text")
+                        p
+                            label.w3-text-blue(for="birth") Дата народження
+                            input.w3-input.w3-border(name="birth", type="text")
+                        p
+                            button.w3-btn.w3-blue Додати новий запис
+
+        button.w3-button.w3-round-xxlarge.w3-margin.w3-pale-red(style='width: 12%;', onclick="document.getElementById('id02').style.display='block'")
             p Видалити запис
-        div.w3-button.w3-round-xxlarge.w3-margin.w3-pale-yellow(style='width: 12%;')
+        div#id02.w3-modal
+            div.w3-modal-content
+                div.w3-container
+                    span.w3-button.w3-display-topright(onclick="document.getElementById('id02').style.display='none'") &times;
+                    p Some text. Some text. Some text2.
+                    p Some text. Some text. Some text.
+
+        button.w3-button.w3-round-xxlarge.w3-margin.w3-pale-yellow(style='width: 12%;', onclick="document.getElementById('id03').style.display='block'")
             p Редагувати запис
+        div#id03.w3-modal
+            div.w3-modal-content
+                div.w3-container
+                    span.w3-button.w3-display-topright(onclick="document.getElementById('id03').style.display='none'") &times;
+                    form.w3-container.w3-card-4(action="/action_page.php")
+                        h2.w3-text-blue Редагування запису
+                        p Форма для редагування запису в довіднику
+                        p
+                            label.w3-text-blue(for="last") Прізвище
+                            input.w3-input.w3-border(name="last", type="text")
+                        p
+                            label.w3-text-blue(for="first") Ім'я
+                            input.w3-input.w3-border(name="first", type="text")
+                        p
+                            label.w3-text-blue(for="father") По батькові
+                            input.w3-input.w3-border(name="father", type="text")
+                        p
+                            label.w3-text-blue(for="org") Організація
+                            input.w3-input.w3-border(name="org", type="text")
+                        p
+                            label.w3-text-blue(for="part") Відділ
+                            input.w3-input.w3-border(name="part", type="text")
+                        p
+                            label.w3-text-blue(for="phone") Номер телефону
+                            input.w3-input.w3-border(name="phone", type="text")
+                        p
+                            label.w3-text-blue(for="main") E-mail
+                            input.w3-input.w3-border(name="mail", type="text")
+                        p
+                            label.w3-text-blue(for="birth") Дата народження
+                            input.w3-input.w3-border(name="birth", type="text")
+                        p
+                            button.w3-btn.w3-blue Редагувати запис
+
         div.w3-button.w3-round-xxlarge.w3-margin.w3-right(style='width: 40%;')
             div.w3-input.w3-border.w3-padding
                 input(type='text', placeholder='Пошук...', style='width: 100%;') 
