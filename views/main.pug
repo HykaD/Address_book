@@ -14,61 +14,46 @@ script.
         setTimeout(hidePreloader, 10000);
       }
 
-    async function searchRecords() {
-        const searchQuery = document.querySelector("#searchQuery").value;
+script.
+  function searchRecords() {
+    // Код для пошуку записів
+    const searchQuery = document.getElementById('searchQuery').value;
+    // Використовуємо fetch API для звернення до сервера і виклику функції для відображення знайдених записів
+    fetch('/delete', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ searchQuery })
+    })
+    .then(response => response.json())
+    .then(data => {
+      // Виводимо повідомлення про знайдені записи
+      document.getElementById('deleteInfo').innerText = data.message;
+    })
+    .catch(error => console.error('Помилка пошуку записів:', error));
+  }
 
-        try {
-            const response = await fetch(`/search?query=${encodeURIComponent(searchQuery)}`);
-            if (!response.ok) {
-                throw new Error('Помилка при виконанні пошуку');
-            }
-
-            const result = await response.json();
-            if (result.length === 0) {
-                alert('Запис не знайдено');
-                document.getElementById('foundDataContainer').style.display = 'none';
-            } else {
-                const user = result[0]; // Припустимо, що знайдено лише один запис
-                document.getElementById('foundDataContainer').style.display = 'block';
-                document.querySelector("#foundLast").value = user.last;
-                document.querySelector("#foundFirst").value = user.first;
-                ...
-                document.querySelector("#foundBirth").value = user.birth;
-            }
-        } catch (error) {
-            console.error('Помилка при виконанні пошуку:', error);
-            alert('Помилка при виконанні пошуку');
-        }
-    }
-
-    async function deleteRecord() {
-        const searchQuery = document.querySelector("#searchQuery").value; // Отримати значення пошукового запиту з поля вводу
-
-        try {
-            const response = await fetch('/delete', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ searchQuery }), // Передати значення пошукового запиту у тілі запиту
-            });
-
-            if (!response.ok) {
-                throw new Error('Помилка при видаленні запису з сервера');
-            }
-
-            const result = await response.json();
-            if (result.success) {
-                alert('Запис видалено успішно');
-                location.reload(); // Перезавантажити сторінку, щоб побачити оновлені дані
-            } else {
-                alert('Запис не знайдено');
-            }
-        } catch (error) {
-            console.error('Помилка при видаленні запису:', error);
-            alert('Помилка при видаленні запису');
-        }
-    }
+  function deleteRecord() {
+    // Отримуємо ID запису для видалення з глобальної змінної, яку ми встановимо в попередній функції пошуку
+    const idToDelete = document.getElementById('deleteInfo').getAttribute('data-id');
+    // Використовуємо fetch API для відправки запиту на сервер для видалення запису
+    fetch('/delete-confirm', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ id: idToDelete })
+    })
+    .then(response => response.json())
+    .then(data => {
+      // Виводимо повідомлення про успішне видалення
+      alert(data.message);
+      // Перезавантажуємо сторінку для оновлення списку після видалення
+      location.reload();
+    })
+    .catch(error => console.error('Помилка видалення запису:', error));
+  }
 
 
 
@@ -123,41 +108,18 @@ div.w3-panel.w3-light-gray
             div.w3-modal-content
                 div.w3-container
                     span.w3-button.w3-display-topright(onclick="document.getElementById('id02').style.display='none'") &times;
-                    form.w3-container.w3-card-4
+                    form#deleteForm.w3-container.w3-card-4(action="/delete", method="POST")
                         h2.w3-text-blue Видалення запису
                         p
                             div.w3-button.w3-round-xxlarge.w3-margin.w3-right(style='width: 40%;')
-                        form#searchForm.w3-container.w3-card-4
-                            div.w3-input.w3-border.w3-padding
-                                input(type='text', placeholder='Пошук...', style='width: 100%;', id='searchQuery')
-                                button.w3-btn.w3-blue(type="button", onclick="searchRecords()") Пошук
-                            div#foundDataContainer(style='display: none;')
-                                p
-                                    label.w3-text-blue(for="foundLast") Прізвище
-                                    input#foundLast.w3-input.w3-border(name="foundLast", type="text")
-                                p
-                                    label.w3-text-blue(for="foundFirst") Ім'я
-                                    input#foundFirst.w3-input.w3-border(name="foundFirst", type="text")
-                                p
-                                    label.w3-text-blue(for="foundFather") По батькові
-                                    input#foundFather.w3-input.w3-border(name="foundFather", type="text")
-                                p
-                                    label.w3-text-blue(for="foundOrg") Організація
-                                    input#foundOrg.w3-input.w3-border(name="foundOrg", type="text")
-                                p
-                                    label.w3-text-blue(for="foundPart") Відділ
-                                    input#foundPart.w3-input.w3-border(name="foundPart", type="text")
-                                p
-                                    label.w3-text-blue(for="foundPhone") Номер телефону
-                                    input#foundPhone.w3-input.w3-border(name="foundPhone", type="text")
-                                p
-                                    label.w3-text-blue(for="foundMail") E-mail
-                                    input#foundMail.w3-input.w3-border(name="foundMail", type="text")
-                                p
-                                    label.w3-text-blue(for="foundBirth") Дата народження
-                                    input#foundBirth.w3-input.w3-border(name="foundBirth", type="text")
-                                p
-                                    button.w3-btn.w3-blue(type="button", onclick="deleteRecord()") Видалити запис
+                        div.w3-input.w3-border.w3-padding
+                            input(type='text', placeholder='Пошук...', style='width: 100%;', id='searchQuery')
+                            button.w3-btn.w3-blue(type="button", onclick="searchRecords()") Пошук
+                        p
+                            | #{deleteInfo || ''}
+                        p
+                            button.w3-btn.w3-red(type="button", onclick="deleteRecord()") Видалити
+                            
 
         button.w3-button.w3-round-xxlarge.w3-margin.w3-pale-yellow(style='width: 12%;', onclick="document.getElementById('id03').style.display='block'")
             p Редагувати запис

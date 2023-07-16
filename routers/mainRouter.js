@@ -2,6 +2,23 @@ const express = require('express');
 const router = express.Router();
 const connectToDB = require('../connection');
 
+async function connectToDBAndCreateTextIndex() {
+  try {
+    const db = await connectToDB();
+    const collection = db.collection('phones');
+    
+    // Встановлюємо повнотекстовий індекс для полів, по яких хочемо здійснювати пошук
+    await collection.createIndex({ last: 'text', first: 'text', father: 'text', org: 'text', part: 'text', phone: 'text', mail: 'text', birth: 'text' });
+
+    console.log('Повнотекстовий індекс встановлено для колекції phones.');
+  } catch (error) {
+    console.error('Помилка при встановленні повнотекстового індексу:', error);
+  }
+}
+
+// Викликаємо функцію для підключення до бази даних та встановлення повнотекстового індексу
+connectToDBAndCreateTextIndex();
+
 router.get('/', async (req, res) => {
   try {
     const db = await connectToDB();
@@ -73,5 +90,59 @@ router.post('/add', async (req, res) => {
     }
   });
    
+
+  router.post('/delete', async (req, res) => {
+    try {
+      const { searchQuery } = req.body;
+  
+      if (!searchQuery) {
+        return res.status(400).send('Поле пошуку не заповнене');
+      }
+  
+      const db = await connectToDB();
+      const collection = db.collection('phones');
+  
+      // Виконуємо пошук запису за допомогою пошукового запиту
+      const recordToDelete = await collection.findOne({ $text: { $search: searchQuery } });
+  
+      if (!recordToDelete) {
+        return res.status(404).json({ message: 'Запис не знайдено' });
+      }
+  
+      // Виведемо знайдений запис у шаблоні для підтвердження перед видаленням
+      res.render('main', { title: 'Greetings from Pug', users: [], deleteInfo: `Знайдений запис: ${recordToDelete.first} ${recordToDelete.last}` });
+  
+    } catch (error) {
+      console.error('Помилка при видаленні запису:', error);
+      res.status(500).send('Помилка сервера');
+    }
+  });
+  
+  router.post('/delete-confirm', async (req, res) => {
+    try {
+      const { id } = req.body;
+  
+      if (!id) {
+        return res.status(400).send('Не вказано ID запису для видалення');
+      }
+  
+      const db = await connectToDB();
+      const collection = db.collection('phones');
+  
+      // Виконуємо видалення запису за його ID
+      const result = await collection.deleteOne({ _id: id });
+  
+      if (result.deletedCount === 0) {
+        return res.status(404).json({ message: 'Запис не знайдено' });
+      }
+  
+      res.status(200).json({ message: 'Запис видалено успішно' });
+  
+    } catch (error) {
+      console.error('Помилка при видаленні запису:', error);
+      res.status(500).send('Помилка сервера');
+    }
+  });
+  
 
 module.exports = router;
