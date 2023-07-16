@@ -1,7 +1,23 @@
 html 
 head 
 title=title 
-style 
+style.
+      .sticky-header  {
+        position: -webkit-sticky;
+        position: sticky;
+        top: 0;
+        padding: 50px;
+        font-size: 20px;
+      }
+  .table-container {
+    max-height: 400px;
+    overflow-y: auto;
+    position: absolute;
+    width: 100%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
 link(rel='stylesheet', href='w3.css', type='text/css')
 link(rel='stylesheet', href='preloader.css', type='text/css')
 link(rel='icon', href='data:;base64,iVBORw0KGgo=')
@@ -15,171 +31,199 @@ script.
       }
 
 script.
-  function searchRecords() {
-    // Код для пошуку записів
+  async function searchRecords() {
     const searchQuery = document.getElementById('searchQuery').value;
-    // Використовуємо fetch API для звернення до сервера і виклику функції для відображення знайдених записів
-    fetch('/delete', {
+    // Використовуємо fetch API для звернення до сервера та отримання повного об'єкта за пошуковим запитом
+    const response = await fetch('/search', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({ searchQuery })
-    })
-    .then(response => response.json())
-    .then(data => {
-      // Виводимо повідомлення про знайдені записи
-      document.getElementById('deleteInfo').innerText = data.message;
-    })
-    .catch(error => console.error('Помилка пошуку записів:', error));
+    });
+    const data = await response.json();
+    // Показуємо повний об'єкт у попередженні перед видаленням
+    document.getElementById('deleteInfo').innerText = `Попередження перед видаленням: ${JSON.stringify(data, null, 2)}`;
+    // Зберігаємо ID знайденого запису для використання в функції видалення
+    document.getElementById('deleteInfo').setAttribute('data-id', data._id);
   }
 
-  function deleteRecord() {
-    // Отримуємо ID запису для видалення з глобальної змінної, яку ми встановимо в попередній функції пошуку
-    const idToDelete = document.getElementById('deleteInfo').getAttribute('data-id');
-    // Використовуємо fetch API для відправки запиту на сервер для видалення запису
-    fetch('/delete-confirm', {
+  async function showDeleteConfirmation() {
+    const searchQuery = document.getElementById('searchQuery').value;
+
+    if (!searchQuery) {
+      return alert('Поле пошуку не заповнене');
+    }
+
+    const response = await fetch('/search', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ id: idToDelete })
-    })
-    .then(response => response.json())
-    .then(data => {
-      // Виводимо повідомлення про успішне видалення
-      alert(data.message);
-      // Перезавантажуємо сторінку для оновлення списку після видалення
-      location.reload();
-    })
-    .catch(error => console.error('Помилка видалення запису:', error));
+      body: JSON.stringify({ searchQuery })
+    });
+    const data = await response.json();
+
+    if (!data) {
+      return alert('Запис не знайдено');
+    }
+
+    // Показуємо повідомлення перед видаленням з повним записом
+    const confirmDelete = confirm(`Попередження перед видаленням:\n${JSON.stringify(data, null, 2)}\nВидалити запис?`);
+
+    if (confirmDelete) {
+      // Викликаємо функцію для видалення запису
+      deleteRecord(data._id);
+    }
   }
 
+  async function deleteRecord(id) {
+    const response = await fetch('/delete', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ id })
+    });
 
+    const result = await response.json();
+
+    alert(result.message);
+    // Перезавантажуємо сторінку після видалення
+    location.reload();
+  }
+  function editUser(userId) {
+    // Замість цього логу можна виконати редагування користувача зі зазначеним userId
+    console.log('Редагуємо користувача з id:', userId);
+  }
 
 body
 #preloader
   .loader
 
 
-div.w3-panel.w3-light-gray
-    div.div.w3-custom-grid
-        button.w3-button.w3-round-xxlarge.w3-margin.w3-pale-green(style='width: 12%;', onclick="document.getElementById('id01').style.display='block'")
-            p Додати запис
-        div#id01.w3-modal
-            div.w3-modal-content
-                div.w3-container
-                    span.w3-button.w3-display-topright(onclick="document.getElementById('id01').style.display='none'") &times;
-                    form.w3-container.w3-card-4(action="/add", method="POST")
-                        h2.w3-text-blue Додавання запису
-                        p Форма для заповнення нового запису в довідник
-                        p
-                            label.w3-text-blue(for="last") Прізвище
-                            input.w3-input.w3-border(name="last", type="text")
-                        p
-                            label.w3-text-blue(for="first") Ім'я
-                            input.w3-input.w3-border(name="first", type="text")
-                        p
-                            label.w3-text-blue(for="father") По батькові
-                            input.w3-input.w3-border(name="father", type="text")
-                        p
-                            label.w3-text-blue(for="org") Організація
-                            input.w3-input.w3-border(name="org", type="text")
-                        p
-                            label.w3-text-blue(for="part") Відділ
-                            input.w3-input.w3-border(name="part", type="text")
-                        p
-                            label.w3-text-blue(for="phone") Номер телефону
-                            input.w3-input.w3-border(name="phone", type="text")
-                        p
-                            label.w3-text-blue(for="main") E-mail
-                            input.w3-input.w3-border(name="mail", type="text")
-                        p
-                            label.w3-text-blue(for="birth") Дата народження
-                            input.w3-input.w3-border(name="birth", type="text")
-                        p
-                            button.w3-btn.w3-blue(type="submit") Додати новий запис
+div
+    div.w3-panel.w3-light-gray
+        div.div.w3-custom-grid
+            button.w3-button.w3-round-xxlarge.w3-margin.w3-pale-green(style='width: 12%;', onclick="document.getElementById('id01').style.display='block'")
+                p Додати запис
+            div#id01.w3-modal
+                div.w3-modal-content
+                    div.w3-container
+                        span.w3-button.w3-display-topright(onclick="document.getElementById('id01').style.display='none'") &times;
+                        form.w3-container.w3-card-4(action="/add", method="POST")
+                            h2.w3-text-blue Додавання запису
+                            p Форма для заповнення нового запису в довідник
+                            p
+                                label.w3-text-blue(for="last") Прізвище
+                                input.w3-input.w3-border(name="last", type="text")
+                            p
+                                label.w3-text-blue(for="first") Ім'я
+                                input.w3-input.w3-border(name="first", type="text")
+                            p
+                                label.w3-text-blue(for="father") По батькові
+                                input.w3-input.w3-border(name="father", type="text")
+                            p
+                                label.w3-text-blue(for="org") Організація
+                                input.w3-input.w3-border(name="org", type="text")
+                            p
+                                label.w3-text-blue(for="part") Відділ
+                                input.w3-input.w3-border(name="part", type="text")
+                            p
+                                label.w3-text-blue(for="phone") Номер телефону
+                                input.w3-input.w3-border(name="phone", type="text")
+                            p
+                                label.w3-text-blue(for="main") E-mail
+                                input.w3-input.w3-border(name="mail", type="text")
+                            p
+                                label.w3-text-blue(for="birth") Дата народження
+                                input.w3-input.w3-border(name="birth", type="text")
+                            p
+                                button.w3-btn.w3-blue(type="submit") Додати новий запис
 
 
 
-        button.w3-button.w3-round-xxlarge.w3-margin.w3-pale-red(style='width: 12%;', onclick="document.getElementById('id02').style.display='block'")
-            p Видалити запис
-        div#id02.w3-modal
-            div.w3-modal-content
-                div.w3-container
-                    span.w3-button.w3-display-topright(onclick="document.getElementById('id02').style.display='none'") &times;
-                    form#deleteForm.w3-container.w3-card-4(action="/delete", method="POST")
-                        h2.w3-text-blue Видалення запису
-                        p
-                            div.w3-button.w3-round-xxlarge.w3-margin.w3-right(style='width: 40%;')
-                        div.w3-input.w3-border.w3-padding
-                            input(type='text', placeholder='Пошук...', style='width: 100%;', id='searchQuery')
-                            button.w3-btn.w3-blue(type="button", onclick="searchRecords()") Пошук
-                        p
-                            | #{deleteInfo || ''}
-                        p
-                            button.w3-btn.w3-red(type="button", onclick="deleteRecord()") Видалити
-                            
+            button.w3-button.w3-round-xxlarge.w3-margin.w3-pale-red(style='width: 12%;', onclick="document.getElementById('id02').style.display='block'")
+                p Видалити запис
+            div#id02.w3-modal
+                div.w3-modal-content
+                    div.w3-container
+                        span.w3-button.w3-display-topright(onclick="document.getElementById('id02').style.display='none'") &times;
+                        form.w3-container.w3-card-4(id="searchForm")
+                            div.w3-input.w3-border.w3-padding
+                                input(type='text', placeholder='Пошук...', style='width: 100%;', id='searchQuery')
+                        button.w3-button.w3-round-xxlarge.w3-margin.w3-pale-red(onclick="showDeleteConfirmation()")
+                            p Видалити запис
+                        div#id02.w3-modal
+                            div.w3-modal-content
+                                div.w3-container
+                                    span.w3-button.w3-display-topright(onclick="document.getElementById('id02').style.display='none'") &times;
+                                        #deleteInfo.w3-panel.w3-red(style='margin-top: 10px; padding: 10px;')
+                                
 
-        button.w3-button.w3-round-xxlarge.w3-margin.w3-pale-yellow(style='width: 12%;', onclick="document.getElementById('id03').style.display='block'")
-            p Редагувати запис
-        div#id03.w3-modal
-            div.w3-modal-content
-                div.w3-container
-                    span.w3-button.w3-display-topright(onclick="document.getElementById('id03').style.display='none'") &times;
-                    form.w3-container.w3-card-4(action="/action_page.php")
-                        h2.w3-text-blue Редагування запису
-                        p Форма для редагування запису в довіднику
-                        p
-                            label.w3-text-blue(for="last") Прізвище
-                            input.w3-input.w3-border(name="last", type="text")
-                        p
-                            label.w3-text-blue(for="first") Ім'я
-                            input.w3-input.w3-border(name="first", type="text")
-                        p
-                            label.w3-text-blue(for="father") По батькові
-                            input.w3-input.w3-border(name="father", type="text")
-                        p
-                            label.w3-text-blue(for="org") Організація
-                            input.w3-input.w3-border(name="org", type="text")
-                        p
-                            label.w3-text-blue(for="part") Відділ
-                            input.w3-input.w3-border(name="part", type="text")
-                        p
-                            label.w3-text-blue(for="phone") Номер телефону
-                            input.w3-input.w3-border(name="phone", type="text")
-                        p
-                            label.w3-text-blue(for="mail") E-mail
-                            input.w3-input.w3-border(name="mail", type="text")
-                        p
-                            label.w3-text-blue(for="birth") Дата народження
-                            input.w3-input.w3-border(name="birth", type="text")
-                        p
-                            button.w3-btn.w3-blue Редагувати запис
+            button.w3-button.w3-round-xxlarge.w3-margin.w3-pale-yellow(style='width: 12%;', onclick="document.getElementById('id03').style.display='block'")
+                p Редагувати запис
+            div#id03.w3-modal
+                div.w3-modal-content
+                    div.w3-container
+                        span.w3-button.w3-display-topright(onclick="document.getElementById('id03').style.display='none'") &times;
+                        form.w3-container.w3-card-4(action="/action_page.php")
+                            h2.w3-text-blue Редагування запису
+                            p Форма для редагування запису в довіднику
+                            p
+                                label.w3-text-blue(for="last") Прізвище
+                                input.w3-input.w3-border(name="last", type="text")
+                            p
+                                label.w3-text-blue(for="first") Ім'я
+                                input.w3-input.w3-border(name="first", type="text")
+                            p
+                                label.w3-text-blue(for="father") По батькові
+                                input.w3-input.w3-border(name="father", type="text")
+                            p
+                                label.w3-text-blue(for="org") Організація
+                                input.w3-input.w3-border(name="org", type="text")
+                            p
+                                label.w3-text-blue(for="part") Відділ
+                                input.w3-input.w3-border(name="part", type="text")
+                            p
+                                label.w3-text-blue(for="phone") Номер телефону
+                                input.w3-input.w3-border(name="phone", type="text")
+                            p
+                                label.w3-text-blue(for="mail") E-mail
+                                input.w3-input.w3-border(name="mail", type="text")
+                            p
+                                label.w3-text-blue(for="birth") Дата народження
+                                input.w3-input.w3-border(name="birth", type="text")
+                            p
+                                button.w3-btn.w3-blue Редагувати запис
 
-        div.w3-button.w3-round-xxlarge.w3-margin.w3-right(style='width: 40%;')
-            div.w3-input.w3-border.w3-padding
-                input(type='text', placeholder='Пошук...', style='width: 100%;') 
-div.w3-table-all.w3-display-middle.w3-threequarter
-    table(style='width: 100%;')
-        thead
-            tr
-                th Прізвище
-                th Ім'я
-                th По батькові
-                th Організація
-                th Відділ
-                th Номер телефону
-                th E-mail
-                th Дата народження
-        tbody
-            each user in users  
+            div.w3-button.w3-round-xxlarge.w3-margin.w3-right(style='width: 40%;')
+                div.w3-input.w3-border.w3-padding
+                    input(type='text', placeholder='Пошук...', style='width: 100%;') 
+div.table-container.w3-display-container.w3-display-middle
+    div.w3-table-all.w3-threequarter(style='max-height: 400px; overflow-y: auto;')
+        table(style='width: 100%;; table-layout: fixed;')
+            thead
                 tr
-                    td= user.last
-                    td= user.first
-                    td= user.father
-                    td= user.org
-                    td= user.part
-                    td= user.phone
-                    td= user.mail
-                    td= user.birth
+                    th Прізвище
+                    th Ім'я
+                    th По батькові
+                    th Організація
+                    th Відділ
+                    th Номер телефону
+                    th E-mail
+                    th Дата народження
+            tbody
+                each user in users  
+                    tr
+                        td(style='word-wrap: break-word;')= user.last
+                        td(style='word-wrap: break-word;')= user.first
+                        td(style='word-wrap: break-word;')= user.father
+                        td(style='word-wrap: break-word;')= user.org
+                        td(style='word-wrap: break-word;')= user.part
+                        td(style='word-wrap: break-word;')= user.phone
+                        td(style='word-wrap: break-word;')= user.mail
+                        td(style='word-wrap: break-word;')= user.birth
+                        td
+                            button.w3-btn.w3-blue.w3-round-xxlarge(onclick='editUser(\'' + user._id + '\')') Редагувати
+

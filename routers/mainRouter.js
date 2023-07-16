@@ -2,6 +2,10 @@ const express = require('express');
 const router = express.Router();
 const connectToDB = require('../connection');
 
+// mainRouter.js
+const { ObjectId } = require('mongodb');
+
+
 async function connectToDBAndCreateTextIndex() {
   try {
     const db = await connectToDB();
@@ -66,51 +70,22 @@ router.post('/add', async (req, res) => {
 
   router.post('/delete', async (req, res) => {
     try {
-      const { searchQuery } = req.body;
+      const { id } = req.body;
   
-      if (!searchQuery) {
-        return res.status(400).send('Поле пошуку не заповнене');
+      if (!id) {
+        return res.status(400).send('Поле ID не заповнене');
       }
   
       const db = await connectToDB();
       const collection = db.collection('phones');
   
-      // Виконуємо пошук запису за допомогою пошукового запиту
-      const result = await collection.deleteOne({ $text: { $search: searchQuery } });
+      const result = await collection.deleteOne({ _id: new ObjectId(id) });
   
       if (result.deletedCount === 0) {
         return res.status(404).json({ message: 'Запис не знайдено' });
       }
   
       res.status(200).json({ message: 'Запис видалено успішно' });
-  
-    } catch (error) {
-      console.error('Помилка при видаленні запису:', error);
-      res.status(500).send('Помилка сервера');
-    }
-  });
-   
-
-  router.post('/delete', async (req, res) => {
-    try {
-      const { searchQuery } = req.body;
-  
-      if (!searchQuery) {
-        return res.status(400).send('Поле пошуку не заповнене');
-      }
-  
-      const db = await connectToDB();
-      const collection = db.collection('phones');
-  
-      // Виконуємо пошук запису за допомогою пошукового запиту
-      const recordToDelete = await collection.findOne({ $text: { $search: searchQuery } });
-  
-      if (!recordToDelete) {
-        return res.status(404).json({ message: 'Запис не знайдено' });
-      }
-  
-      // Виведемо знайдений запис у шаблоні для підтвердження перед видаленням
-      res.render('main', { title: 'Greetings from Pug', users: [], deleteInfo: `Знайдений запис: ${recordToDelete.first} ${recordToDelete.last}` });
   
     } catch (error) {
       console.error('Помилка при видаленні запису:', error);
@@ -129,8 +104,7 @@ router.post('/add', async (req, res) => {
       const db = await connectToDB();
       const collection = db.collection('phones');
   
-      // Виконуємо видалення запису за його ID
-      const result = await collection.deleteOne({ _id: id });
+      const result = await collection.deleteOne({ _id: ObjectId(id) });
   
       if (result.deletedCount === 0) {
         return res.status(404).json({ message: 'Запис не знайдено' });
@@ -144,5 +118,32 @@ router.post('/add', async (req, res) => {
     }
   });
   
+  router.post('/search', async (req, res) => {
+    try {
+      const { searchQuery } = req.body;
+  
+      if (!searchQuery) {
+        return res.status(400).send('Поле пошуку не заповнене');
+      }
+  
+      const db = await connectToDB();
+      const collection = db.collection('phones');
+  
+      // Виконуємо пошук запису за допомогою пошукового запиту
+      const record = await collection.findOne({ $text: { $search: searchQuery } });
+  
+      if (!record) {
+        return res.status(404).json({ message: 'Запис не знайдено' });
+      }
+  
+      res.status(200).json(record);
+  
+    } catch (error) {
+      console.error('Помилка при пошуку запису:', error);
+      res.status(500).send('Помилка сервера');
+    }
+  });
+  
+
 
 module.exports = router;
