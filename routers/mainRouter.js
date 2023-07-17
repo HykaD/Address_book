@@ -144,6 +144,65 @@ router.post('/add', async (req, res) => {
     }
   });
   
+  router.get('/get_user/:userId', async (req, res) => {
+    try {
+      const userId = req.params.userId;
+      const db = await connectToDB();
+      const collection = db.collection('phones');
+      const user = await collection.findOne({ _id: new ObjectId(userId) });
+  
+      if (!user) {
+        return res.status(404).json({ message: 'Користувача з таким ID не знайдено' });
+      }
+  
+      res.json(user);
+    } catch (error) {
+      console.error('Помилка отримання даних користувача:', error);
+      res.status(500).send('Помилка сервера');
+    }
+  });
+  
+  // Метод для оновлення даних користувача за його ID
+  router.post('/update_user/:userId', async (req, res) => {
+    try {
+      const userId = req.params.userId;
+      const updatedUserData = req.body;
+      const db = await connectToDB();
+      const collection = db.collection('phones');
+  
+      const result = await collection.updateOne(
+        { _id: new ObjectId(userId) },
+        { $set: updatedUserData }
+      );
+  
+      if (result.matchedCount === 0) {
+        return res.status(404).json({ message: 'Користувача з таким ID не знайдено' });
+      }
+  
+      res.json({ message: 'Дані користувача успішно оновлено' });
+    } catch (error) {
+      console.error('Помилка при оновленні даних користувача:', error);
+      res.status(500).send('Помилка сервера');
+    }
+  });
+
+  router.get('/edit/:userId', async (req, res) => {
+    try {
+      const userId = req.params.userId;
+      const db = await connectToDB();
+      const collection = db.collection('phones');
+      const user = await collection.findOne({ _id: new ObjectId(userId) });
+  
+      if (!user) {
+        return res.status(404).json({ message: 'Користувача з таким ID не знайдено' });
+      }
+  
+      res.render('edit', { title: 'Редагування запису', user }); // Передаємо об'єкт user в шаблон edit.pug
+    } catch (error) {
+      console.error('Помилка отримання даних користувача:', error);
+      res.status(500).send('Помилка сервера');
+    }
+  });
 
 
 module.exports = router;

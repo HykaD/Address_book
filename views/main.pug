@@ -22,6 +22,7 @@ link(rel='stylesheet', href='w3.css', type='text/css')
 link(rel='stylesheet', href='preloader.css', type='text/css')
 link(rel='icon', href='data:;base64,iVBORw0KGgo=')
 script(src="jquery.js")
+script(src="https://code.jquery.com/jquery-3.6.0.min.js")
 script.
       function hidePreloader() {
         document.getElementById('preloader').style.display = 'none';
@@ -92,11 +93,61 @@ script.
     // Перезавантажуємо сторінку після видалення
     location.reload();
   }
-  function editUser(userId) {
-    // Замість цього логу можна виконати редагування користувача зі зазначеним userId
-    console.log('Редагуємо користувача з id:', userId);
-  }
+script.
+  function saveUser(id) {
+    // Отримуємо значення полів з модального вікна
+    var last = $('#editForm input[name="last"]').val();
+    var first = $('#editForm input[name="first"]').val();
+    var father = $('#editForm input[name="father"]').val();
+    var org = $('#editForm input[name="org"]').val();
+    var part = $('#editForm input[name="part"]').val();
+    var phone = $('#editForm input[name="phone"]').val();
+    var mail = $('#editForm input[name="mail"]').val();
+    var birth = $('#editForm input[name="birth"]').val();
 
+    // Формуємо об'єкт з новими даними користувача
+    var updatedUser = {
+      last: last,
+      first: first,
+      father: father,
+      org: org,
+      part: part,
+      phone: phone,
+      mail: mail,
+      birth: birth
+    };
+
+    // Виконуємо AJAX запит на сервер для оновлення даних користувача
+    $.ajax({
+      url: '/update_user/' + id, // Використовуємо id в URL
+      type: 'POST',
+      data: updatedUser,
+      success: function(data) {
+        // Успішно оновлено дані користувача
+        console.log('Дані користувача успішно оновлено:', data);
+
+        // Закриваємо модальне вікно
+        $('#id03').hide();
+      },
+      error: function(err) {
+        console.error('Помилка при оновленні даних користувача:', err);
+      }
+    });
+  }
+    function editUser(id) {
+    const editForm = document.getElementById('editForm');
+    editForm.action = '/update_user/' + id;
+    const user = JSON.parse(document.getElementById('user-' + id).getAttribute('data-user'));
+    editForm.elements.last.value = user.last;
+    editForm.elements.first.value = user.first;
+    editForm.elements.father.value = user.father;
+    editForm.elements.org.value = user.org;
+    editForm.elements.part.value = user.part;
+    editForm.elements.phone.value = user.phone;
+    editForm.elements.mail.value = user.mail;
+    editForm.elements.birth.value = user.birth;
+    document.getElementById('id03').style.display='block';
+    }
 body
 #preloader
   .loader
@@ -159,43 +210,6 @@ div
                                 div.w3-container
                                     span.w3-button.w3-display-topright(onclick="document.getElementById('id02').style.display='none'") &times;
                                         #deleteInfo.w3-panel.w3-red(style='margin-top: 10px; padding: 10px;')
-                                
-
-            button.w3-button.w3-round-xxlarge.w3-margin.w3-pale-yellow(style='width: 12%;', onclick="document.getElementById('id03').style.display='block'")
-                p Редагувати запис
-            div#id03.w3-modal
-                div.w3-modal-content
-                    div.w3-container
-                        span.w3-button.w3-display-topright(onclick="document.getElementById('id03').style.display='none'") &times;
-                        form.w3-container.w3-card-4(action="/action_page.php")
-                            h2.w3-text-blue Редагування запису
-                            p Форма для редагування запису в довіднику
-                            p
-                                label.w3-text-blue(for="last") Прізвище
-                                input.w3-input.w3-border(name="last", type="text")
-                            p
-                                label.w3-text-blue(for="first") Ім'я
-                                input.w3-input.w3-border(name="first", type="text")
-                            p
-                                label.w3-text-blue(for="father") По батькові
-                                input.w3-input.w3-border(name="father", type="text")
-                            p
-                                label.w3-text-blue(for="org") Організація
-                                input.w3-input.w3-border(name="org", type="text")
-                            p
-                                label.w3-text-blue(for="part") Відділ
-                                input.w3-input.w3-border(name="part", type="text")
-                            p
-                                label.w3-text-blue(for="phone") Номер телефону
-                                input.w3-input.w3-border(name="phone", type="text")
-                            p
-                                label.w3-text-blue(for="mail") E-mail
-                                input.w3-input.w3-border(name="mail", type="text")
-                            p
-                                label.w3-text-blue(for="birth") Дата народження
-                                input.w3-input.w3-border(name="birth", type="text")
-                            p
-                                button.w3-btn.w3-blue Редагувати запис
 
             div.w3-button.w3-round-xxlarge.w3-margin.w3-right(style='width: 40%;')
                 div.w3-input.w3-border.w3-padding
@@ -215,7 +229,7 @@ div.table-container.w3-display-container.w3-display-middle
                     th Дата народження
             tbody
                 each user in users  
-                    tr
+                    tr(id=`user-${user._id}`, data-user=JSON.stringify(user))
                         td(style='word-wrap: break-word;')= user.last
                         td(style='word-wrap: break-word;')= user.first
                         td(style='word-wrap: break-word;')= user.father
@@ -225,5 +239,37 @@ div.table-container.w3-display-container.w3-display-middle
                         td(style='word-wrap: break-word;')= user.mail
                         td(style='word-wrap: break-word;')= user.birth
                         td
-                            button.w3-btn.w3-blue.w3-round-xxlarge(onclick='editUser(\'' + user._id + '\')') Редагувати
-
+                            button.w3-btn.w3-blue.w3-round-xxlarge(data-user-id=user._id, onclick="editUser(this.getAttribute('data-user-id'))") Редагувати
+div#id03.w3-modal(style='display: none;')
+  div.w3-modal-content
+      div.w3-container
+          span.w3-button.w3-display-topright(onclick="document.getElementById('id03').style.display='none'") &times;
+          form.w3-container.w3-card-4(id="editForm", action="", method="POST")
+              h2.w3-text-blue Редагування запису
+              p Форма для редагування запису в довіднику
+              p
+                  label.w3-text-blue(for="last") Прізвище
+                  input.w3-input.w3-border(name="last", type="text")
+              p
+                  label.w3-text-blue(for="first") Ім'я
+                  input.w3-input.w3-border(name="first", type="text")
+              p
+                  label.w3-text-blue(for="father") По батькові
+                  input.w3-input.w3-border(name="father", type="text")
+              p
+                  label.w3-text-blue(for="org") Організація
+                  input.w3-input.w3-border(name="org", type="text")
+              p
+                  label.w3-text-blue(for="part") Відділ
+                  input.w3-input.w3-border(name="part", type="text")
+              p
+                  label.w3-text-blue(for="phone") Номер телефону
+                  input.w3-input.w3-border(name="phone", type="text")
+              p
+                  label.w3-text-blue(for="mail") E-mail
+                  input.w3-input.w3-border(name="mail", type="text")
+              p
+                  label.w3-text-blue(for="birth") Дата народження
+                  input.w3-input.w3-border(name="birth", type="text")
+              p
+                  button.w3-btn.w3-blue(type="button", onclick="saveUser('#{user._id}')") Редагувати запис
