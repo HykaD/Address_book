@@ -94,16 +94,39 @@ script.
     location.reload();
   }
 script.
+  function editUser(id) {
+    const editForm = document.getElementById('editForm');
+    editForm.action = '/update_user/' + id;
+    const userElement = document.getElementById('user-' + id);
+    const user = JSON.parse(userElement.getAttribute('data-user'));
+
+    // Проверяем, что user не пустой объект, прежде чем заполнять поля формы
+    if (user && Object.keys(user).length > 0) {
+      editForm.elements.last.value = user.last || '';
+      editForm.elements.first.value = user.first || '';
+      editForm.elements.father.value = user.father || '';
+      editForm.elements.org.value = user.org || '';
+      editForm.elements.part.value = user.part || '';
+      editForm.elements.phone.value = user.phone || '';
+      editForm.elements.mail.value = user.mail || '';
+      editForm.elements.birth.value = user.birth || '';
+    } else {
+      console.error('Дані користувача відсутні або не вірні.');
+    }
+
+    document.getElementById('id03').style.display = 'block';
+  }
+
   function saveUser(id) {
     // Отримуємо значення полів з модального вікна
-    var last = $('#editForm input[name="last"]').val();
-    var first = $('#editForm input[name="first"]').val();
-    var father = $('#editForm input[name="father"]').val();
-    var org = $('#editForm input[name="org"]').val();
-    var part = $('#editForm input[name="part"]').val();
-    var phone = $('#editForm input[name="phone"]').val();
-    var mail = $('#editForm input[name="mail"]').val();
-    var birth = $('#editForm input[name="birth"]').val();
+    var last = document.getElementById('last').value;
+    var first = document.getElementById('first').value;
+    var father = document.getElementById('father').value;
+    var org = document.getElementById('org').value;
+    var part = document.getElementById('part').value;
+    var phone = document.getElementById('phone').value;
+    var mail = document.getElementById('mail').value;
+    var birth = document.getElementById('birth').value;
 
     // Формуємо об'єкт з новими даними користувача
     var updatedUser = {
@@ -127,27 +150,68 @@ script.
         console.log('Дані користувача успішно оновлено:', data);
 
         // Закриваємо модальне вікно
-        $('#id03').hide();
+        document.getElementById('id03').style.display = 'none';
+
+        // Оновлюємо відповідний рядок в таблиці з оновленими даними
+        updateTableRow(id, updatedUser);
       },
       error: function(err) {
         console.error('Помилка при оновленні даних користувача:', err);
       }
     });
   }
-    function editUser(id) {
-    const editForm = document.getElementById('editForm');
-    editForm.action = '/update_user/' + id;
-    const user = JSON.parse(document.getElementById('user-' + id).getAttribute('data-user'));
-    editForm.elements.last.value = user.last;
-    editForm.elements.first.value = user.first;
-    editForm.elements.father.value = user.father;
-    editForm.elements.org.value = user.org;
-    editForm.elements.part.value = user.part;
-    editForm.elements.phone.value = user.phone;
-    editForm.elements.mail.value = user.mail;
-    editForm.elements.birth.value = user.birth;
-    document.getElementById('id03').style.display='block';
-    }
+
+  // Функція для оновлення даних відповідного рядка в таблиці
+  function updateTableRow(id, data) {
+    const row = document.getElementById('user-' + id);
+    row.querySelector('td:nth-child(1)').textContent = data.last;
+    row.querySelector('td:nth-child(2)').textContent = data.first;
+    row.querySelector('td:nth-child(3)').textContent = data.father;
+    row.querySelector('td:nth-child(4)').textContent = data.org;
+    row.querySelector('td:nth-child(5)').textContent = data.part;
+    row.querySelector('td:nth-child(6)').textContent = data.phone;
+    row.querySelector('td:nth-child(7)').textContent = data.mail;
+    row.querySelector('td:nth-child(8)').textContent = data.birth;
+  }
+
+  async function searchRecords() {
+    const searchQuery = document.getElementById('searchQuery').value;
+
+    // Виконуємо AJAX запит на сервер для пошуку
+    const response = await fetch('/searchMain', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ searchQuery })
+    });
+
+    const records = await response.json();
+
+    // Оновлюємо таблицю з результатами пошуку на стороні клієнта
+    updateTable(records);
+  }
+
+  // Функція для оновлення таблиці з результатами пошуку
+  function updateTable(records) {
+    const tableRows = document.querySelectorAll('tbody tr');
+
+    tableRows.forEach(row => {
+      const user = JSON.parse(row.getAttribute('data-user'));
+      const isVisible = records.some(record => {
+        return record._id === user._id;
+      });
+
+      if (!isVisible) {
+        row.style.display = 'none'; // Приховуємо непотрібний рядок таблиці
+      } else {
+        row.style.display = ''; // Відображаємо знайдений рядок
+      }
+    });
+  }
+
+
+
 body
 #preloader
   .loader
@@ -213,7 +277,7 @@ div
 
             div.w3-button.w3-round-xxlarge.w3-margin.w3-right(style='width: 40%;')
                 div.w3-input.w3-border.w3-padding
-                    input(type='text', placeholder='Пошук...', style='width: 100%;') 
+                    input(type='text', placeholder='Пошук...', style='width: 100%;', oninput='searchRecords()')
 div.table-container.w3-display-container.w3-display-middle
     div.w3-table-all.w3-threequarter(style='max-height: 400px; overflow-y: auto;')
         table(style='width: 100%;; table-layout: fixed;')
@@ -239,37 +303,44 @@ div.table-container.w3-display-container.w3-display-middle
                         td(style='word-wrap: break-word;')= user.mail
                         td(style='word-wrap: break-word;')= user.birth
                         td
-                            button.w3-btn.w3-blue.w3-round-xxlarge(data-user-id=user._id, onclick="editUser(this.getAttribute('data-user-id'))") Редагувати
-div#id03.w3-modal(style='display: none;')
+                            button.w3-btn.w3-blue.w3-round-xxlarge(onclick=`editUser('${user._id}')`) Редагувати
+
+//div#id03.w3-modal(style='display: none;')
   div.w3-modal-content
       div.w3-container
-          span.w3-button.w3-display-topright(onclick="document.getElementById('id03').style.display='none'") &times;
-          form.w3-container.w3-card-4(id="editForm", action="", method="POST")
-              h2.w3-text-blue Редагування запису
-              p Форма для редагування запису в довіднику
-              p
-                  label.w3-text-blue(for="last") Прізвище
-                  input.w3-input.w3-border(name="last", type="text")
-              p
-                  label.w3-text-blue(for="first") Ім'я
-                  input.w3-input.w3-border(name="first", type="text")
-              p
-                  label.w3-text-blue(for="father") По батькові
-                  input.w3-input.w3-border(name="father", type="text")
-              p
-                  label.w3-text-blue(for="org") Організація
-                  input.w3-input.w3-border(name="org", type="text")
-              p
-                  label.w3-text-blue(for="part") Відділ
-                  input.w3-input.w3-border(name="part", type="text")
-              p
-                  label.w3-text-blue(for="phone") Номер телефону
-                  input.w3-input.w3-border(name="phone", type="text")
-              p
-                  label.w3-text-blue(for="mail") E-mail
-                  input.w3-input.w3-border(name="mail", type="text")
-              p
-                  label.w3-text-blue(for="birth") Дата народження
-                  input.w3-input.w3-border(name="birth", type="text")
-              p
-                  button.w3-btn.w3-blue(type="button", onclick="saveUser('#{user._id}')") Редагувати запис
+        span.w3-button.w3-display-topright(onclick="document.getElementById('id03').style.display='none'") &times;
+        form.w3-container.w3-card-4(action=`/update_user/${user._id}`, method='POST')
+          h2.w3-text-blue Редагування запису
+          p Форма для редагування запису в довіднику
+          p
+            label.w3-text-blue(for="last") Прізвище
+            input.w3-input.w3-border(name="last", type="text", value=user.last)
+          p
+            label.w3-text-blue(for="first") Ім'я
+            input.w3-input.w3-border(name="first", type="text", value=user.first)
+          p
+            label.w3-text-blue(for="father") По батькові
+            input.w3-input.w3-border(name="father", type="text", value=user.father)
+          p
+            label.w3-text-blue(for="org") Організація
+            input.w3-input.w3-border(name="org", type="text", value=user.org)
+          p
+            label.w3-text-blue(for="part") Відділ
+            input.w3-input.w3-border(name="part", type="text", value=user.part)
+          p
+            label.w3-text-blue(for="phone") Номер телефону
+            input.w3-input.w3-border(name="phone", type="text", value=user.phone)
+          p
+            label.w3-text-blue(for="mail") E-mail
+            input.w3-input.w3-border(name="mail", type="text", value=user.mail)
+          p
+            label.w3-text-blue(for="birth") Дата народження
+            input.w3-input.w3-border(name="birth", type="text", value=user.birth)
+          p
+            button.w3-btn.w3-blue(type='submit') Зберегти запис
+
+
+
+
+
+
