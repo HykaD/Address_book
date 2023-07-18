@@ -1,7 +1,7 @@
 const { MongoClient } = require('mongodb');
 
-const url = 'mongodb://localhost:27017'; // Припустимо, що MongoDB працює на локальному хості за замовчуванням
-const dbName = 'phoneTerminal'; // Замініть 'yourDatabaseName' на назву вашої бази даних
+const url = 'mongodb://localhost:27017'; 
+const dbName = 'phoneTerminal'; 
 
 async function connectToDB() {
   try {
