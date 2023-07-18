@@ -230,6 +230,125 @@ script.
     document.getElementById('preloader').style.display = 'none';
   }
 
+  function editRecord(userId) {
+    // Отримуємо дані користувача за його ID
+    fetch(`/get_user/${userId}`)
+      .then((response) => response.json())
+      .then((data) => {
+        // Заповнюємо поля модального вікна даними користувача
+        document.getElementById('edit-last').value = data.last;
+        document.getElementById('edit-first').value = data.first;
+        document.getElementById('edit-father').value = data.father;
+        document.getElementById('edit-org').value = data.org;
+        document.getElementById('edit-part').value = data.part;
+        document.getElementById('edit-phone').value = data.phone;
+        document.getElementById('edit-mail').value = data.mail;
+        document.getElementById('edit-birth').value = data.birth;
+
+        // Зберігаємо ID редагованого запису для подальшого використання
+        document.getElementById('edit-record-id').value = data._id;
+      })
+      .catch((error) => console.error('Помилка отримання даних користувача:', error));
+
+    // Відкриваємо модальне вікно редагування
+    document.getElementById('editModal').style.display = 'block';
+  }
+
+script.
+  function closeEditModal() {
+    document.getElementById('editModal').style.display = 'none';
+  }
+script.
+  function updateRecord(event) {
+    event.preventDefault();
+
+    const form = document.getElementById('editForm');
+    const formData = new FormData(form);
+    const recordId = formData.get('id');
+
+    fetch(`/update_user/${recordId}`, {
+      method: 'POST',
+      body: formData,
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log(data);
+        // Закриваємо модальне вікно редагування після збереження запису
+        closeEditModal();
+        // Перезавантажуємо сторінку, щоб оновити таблицю
+        location.reload();
+      })
+      .catch((error) => console.error('Помилка оновлення даних користувача:', error));
+  }
+script.
+  function deleteRecord(recordId) {
+    fetch(`/delete`, {
+      method: 'POST',
+      body: JSON.stringify({ id: recordId }),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log(data);
+        // Перезавантажуємо сторінку, щоб оновити таблицю
+        location.reload();
+      })
+      .catch((error) => console.error('Помилка видалення запису:', error));
+  }
+
+script.
+  async function updateRecord(event) {
+    event.preventDefault();
+
+    const form = document.getElementById('editForm');
+    const formData = new FormData(form);
+    const recordId = formData.get('id');
+
+    if (!recordId) {
+      return console.error('Не вказано ID запису для оновлення');
+    }
+
+    try {
+      // Отримуємо дані користувача за його ID
+      const response = await fetch(`/get_user/${recordId}`);
+      const user = await response.json();
+
+      // Оновлюємо дані користувача з даними з полів форми
+      user.last = formData.get('last');
+      user.first = formData.get('first');
+      user.father = formData.get('father');
+      user.org = formData.get('org');
+      user.part = formData.get('part');
+      user.phone = formData.get('phone');
+      user.mail = formData.get('mail');
+      user.birth = formData.get('birth');
+
+      // Виконуємо AJAX запит на сервер для оновлення даних користувача
+      const updateResponse = await fetch(`/update_user/${recordId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(user),
+      });
+
+      const data = await updateResponse.json();
+      console.log(data);
+
+      // Закриваємо модальне вікно редагування після збереження запису
+      closeEditModal();
+
+      // Перезавантажуємо сторінку, щоб оновити таблицю
+      location.reload();
+    } catch (error) {
+      console.error('Помилка оновлення даних користувача:', error);
+    }
+  }
+
+
+
 body
 #preloader
   .loader
@@ -266,11 +385,11 @@ div
                                 label.w3-text-blue(for="phone") Номер телефону
                                 input.w3-input.w3-border(name="phone", type="text")
                             p
-                                label.w3-text-blue(for="main") E-mail
-                                input.w3-input.w3-border(name="mail", type="text")
+                                label.w3-text-blue(for="mail") E-mail
+                                input.w3-input.w3-border(name="mail", type="email")
                             p
                                 label.w3-text-blue(for="birth") Дата народження
-                                input.w3-input.w3-border(name="birth", type="text")
+                                input#datepicker.w3-input.w3-border(name="birth", type="date")
                             p
                                 button.w3-btn.w3-blue(type="submit") Додати новий запис
 
@@ -321,41 +440,43 @@ div.table-container.w3-display-container.w3-display-middle
                         td(style='word-wrap: break-word;')= user.mail
                         td(style='word-wrap: break-word;')= user.birth
                         td
-                            button.w3-btn.w3-blue.w3-round-xxlarge(onclick=`editUser('${user._id}')`) Редагувати
+                            button.w3-btn.w3-yellow.w3-round-xxlarge(onclick=`editRecord('${user._id}')`) Редагувати
 
-//div#id03.w3-modal(style='display: none;')
-  div.w3-modal-content
-      div.w3-container
-        span.w3-button.w3-display-topright(onclick="document.getElementById('id03').style.display='none'") &times;
-        form.w3-container.w3-card-4(action=`/update_user/${user._id}`, method='POST')
-          h2.w3-text-blue Редагування запису
-          p Форма для редагування запису в довіднику
-          p
-            label.w3-text-blue(for="last") Прізвище
-            input.w3-input.w3-border(name="last", type="text", value=user.last)
-          p
-            label.w3-text-blue(for="first") Ім'я
-            input.w3-input.w3-border(name="first", type="text", value=user.first)
-          p
-            label.w3-text-blue(for="father") По батькові
-            input.w3-input.w3-border(name="father", type="text", value=user.father)
-          p
-            label.w3-text-blue(for="org") Організація
-            input.w3-input.w3-border(name="org", type="text", value=user.org)
-          p
-            label.w3-text-blue(for="part") Відділ
-            input.w3-input.w3-border(name="part", type="text", value=user.part)
-          p
-            label.w3-text-blue(for="phone") Номер телефону
-            input.w3-input.w3-border(name="phone", type="text", value=user.phone)
-          p
-            label.w3-text-blue(for="mail") E-mail
-            input.w3-input.w3-border(name="mail", type="text", value=user.mail)
-          p
-            label.w3-text-blue(for="birth") Дата народження
-            input.w3-input.w3-border(name="birth", type="text", value=user.birth)
-          p
-            button.w3-btn.w3-blue(type='submit') Зберегти запис
+#editModal.w3-modal
+  .w3-modal-content.w3-card-4.w3-animate-opacity
+    .w3-container
+      span.w3-button.w3-display-topright.w3-red(onclick='closeEditModal()') &times;
+      h2 Редагувати запис
+      form#editForm.w3-container.w3-margin-top(onsubmit='updateRecord(event)')
+        input#edit-record-id(type='hidden' name='id')
+        p
+          label(for='edit-last') Прізвище:
+          input#edit-last.w3-input.w3-border(type='text' name='last' required)
+        p
+          label(for='edit-first') Ім'я:
+          input#edit-first.w3-input.w3-border(type='text' name='first' required)
+        p
+          label(for='edit-father') По батькові:
+          input#edit-father.w3-input.w3-border(type='text' name='father')
+        p
+          label(for='edit-org') Організація:
+          input#edit-org.w3-input.w3-border(type='text' name='org' required)
+        p
+          label(for='edit-part') Відділ:
+          input#edit-part.w3-input.w3-border(type='text' name='part')
+        p
+          label(for='edit-phone') Телефон:
+          input#edit-phone.w3-input.w3-border(type='text' name='phone' required)
+        p
+          label(for='edit-mail') Email:
+          input#edit-mail.w3-input.w3-border(type='email' name='mail' required)
+        p
+          label(for='edit-birth') Дата народження:
+          input#edit-birth.w3-input.w3-border(type='date' name='birth' required)
+        button.w3-btn.w3-blue(type='submit') Зберегти запис
+
+
+
 
 
 

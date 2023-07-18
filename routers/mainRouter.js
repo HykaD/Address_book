@@ -61,7 +61,7 @@ router.post('/add', async (req, res) => {
   
       const result = await collection.insertOne(newRecord);
   
-      res.status(200).json({ message: 'Запис додано успішно', insertedId: result.insertedId });
+      res.redirect('/');
     } catch (error) {
       console.error('Помилка при додаванні запису:', error);
       res.status(500).send('Помилка сервера');
@@ -79,6 +79,7 @@ router.post('/add', async (req, res) => {
       const db = await connectToDB();
       const collection = db.collection('phones');
   
+      // Use the 'new' keyword when invoking ObjectId constructor
       const result = await collection.deleteOne({ _id: new ObjectId(id) });
   
       if (result.deletedCount === 0) {
@@ -104,7 +105,8 @@ router.post('/add', async (req, res) => {
       const db = await connectToDB();
       const collection = db.collection('phones');
   
-      const result = await collection.deleteOne({ _id: ObjectId(id) });
+      // Use the 'new' keyword when invoking ObjectId constructor
+      const result = await collection.deleteOne({ _id: new ObjectId(id) });
   
       if (result.deletedCount === 0) {
         return res.status(404).json({ message: 'Запис не знайдено' });
@@ -162,8 +164,7 @@ router.post('/add', async (req, res) => {
     }
   });
   
-  // Метод для оновлення даних користувача за його ID
-  router.post('/update_user/:userId', async (req, res) => {
+  router.post('/update_record/:userId', async (req, res) => {
     try {
       const userId = req.params.userId;
       const updatedUserData = req.body;
@@ -241,5 +242,36 @@ router.get('/get_all_records', async (req, res) => {
     res.status(500).send('Помилка сервера');
   }
 });
+
+router.post('/update_user/:userId', async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const updatedUserData = req.body;
+    const db = await connectToDB();
+    const collection = db.collection('phones');
+
+    // Видаляємо старий запис з бази даних за його ID
+    const deleteResult = await collection.deleteOne({ _id: new ObjectId(userId) });
+
+    if (deleteResult.deletedCount === 0) {
+      return res.status(404).json({ message: 'Користувача з таким ID не знайдено' });
+    }
+
+    // Додаємо новий запис до бази даних з оновленими даними
+    const newRecord = {
+      ...updatedUserData,
+      _id: new ObjectId() // Генеруємо новий ID для нового запису
+    };
+
+    const insertResult = await collection.insertOne(newRecord);
+
+    res.json({ message: 'Дані користувача успішно оновлено' });
+
+  } catch (error) {
+    console.error('Помилка при оновленні даних користувача:', error);
+    res.status(500).send('Помилка сервера');
+  }
+});
+
 
 module.exports = router;
