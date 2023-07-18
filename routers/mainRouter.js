@@ -204,34 +204,8 @@ router.post('/add', async (req, res) => {
     }
   });
   
-  router.post('/searchMain', async (req, res) => {
-    try {
-      const { searchQuery } = req.body;
-  
-      if (!searchQuery) {
-        return res.status(400).send('Поле пошуку не заповнене');
-      }
-  
-      const db = await connectToDB();
-      const collection = db.collection('phones');
-  
-      // Виконуємо пошук записів за допомогою пошукового запиту
-      const records = await collection.find({ $text: { $search: searchQuery } }).toArray();
-  
-      if (!records || records.length === 0) {
-        return res.status(404).json({ message: 'Записів не знайдено' });
-      }
-  
-      res.status(200).json(records);
-    } catch (error) {
-      console.error('Помилка при пошуку записів:', error);
-      res.status(500).send('Помилка сервера');
-    }
-  });
-  
-
-// Функція для пошуку записів про телефони у базі даних
-async function searchPhoneRecords(req, res) {
+// Маршрут для обробки пошукового запиту на сторінці main
+router.post('/searchMain', async (req, res) => {
   try {
     const { searchQuery } = req.body;
 
@@ -254,11 +228,18 @@ async function searchPhoneRecords(req, res) {
     console.error('Помилка при пошуку записів:', error);
     res.status(500).send('Помилка сервера');
   }
-}
+});
 
-// Маршрут для обробки пошукового запиту
-router.post('/searchMain', searchPhoneRecords);
-
-
+router.get('/get_all_records', async (req, res) => {
+  try {
+    const db = await connectToDB();
+    const collection = db.collection('phones');
+    const allRecords = await collection.find({}).toArray();
+    res.json(allRecords);
+  } catch (error) {
+    console.error('Помилка при отриманні всіх записів:', error);
+    res.status(500).send('Помилка сервера');
+  }
+});
 
 module.exports = router;

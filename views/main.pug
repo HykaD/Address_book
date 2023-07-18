@@ -24,14 +24,6 @@ link(rel='icon', href='data:;base64,iVBORw0KGgo=')
 script(src="jquery.js")
 script(src="https://code.jquery.com/jquery-3.6.0.min.js")
 script.
-      function hidePreloader() {
-        document.getElementById('preloader').style.display = 'none';
-      }
-      window.onload = function() {
-        setTimeout(hidePreloader, 10000);
-      }
-
-script.
   async function searchRecords() {
     const searchQuery = document.getElementById('searchQuery').value;
     // Використовуємо fetch API для звернення до сервера та отримання повного об'єкта за пошуковим запитом
@@ -174,22 +166,29 @@ script.
     row.querySelector('td:nth-child(8)').textContent = data.birth;
   }
 
-  async function searchRecords() {
-    const searchQuery = document.getElementById('searchQuery').value;
+  async function searchRecords(searchQuery) {
+    try {
+      if (searchQuery.trim() === '') {
+        // Якщо поле пошуку порожнє, оновлюємо таблицю з всіма записами
+        updateTable(allRecords);
+      } else {
+        // Виконуємо AJAX запит на сервер для пошуку
+        const response = await fetch('/searchMain', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ searchQuery })
+        });
 
-    // Виконуємо AJAX запит на сервер для пошуку
-    const response = await fetch('/searchMain', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ searchQuery })
-    });
+        const records = await response.json();
 
-    const records = await response.json();
-
-    // Оновлюємо таблицю з результатами пошуку на стороні клієнта
-    updateTable(records);
+        // Оновлюємо таблицю з результатами пошуку на стороні клієнта
+        updateTable(records);
+      }
+    } catch (error) {
+      console.error('Помилка при пошуку записів:', error);
+    }
   }
 
   // Функція для оновлення таблиці з результатами пошуку
@@ -210,7 +209,26 @@ script.
     });
   }
 
+  let allRecords = [];
 
+  window.onload = async function () {
+    // Виконуємо AJAX запит на сервер для отримання всіх записів
+    try {
+      const response = await fetch('/get_all_records');
+      allRecords = await response.json();
+      // Оновлюємо таблицю з отриманими записами
+      updateTable(allRecords);
+    } catch (error) {
+      console.error('Помилка при отриманні всіх записів:', error);
+    }
+
+    // Приховуємо preloader після завантаження через 10 секунд
+    setTimeout(hidePreloader, 10000);
+  };
+
+  function hidePreloader() {
+    document.getElementById('preloader').style.display = 'none';
+  }
 
 body
 #preloader
@@ -277,7 +295,7 @@ div
 
             div.w3-button.w3-round-xxlarge.w3-margin.w3-right(style='width: 40%;')
                 div.w3-input.w3-border.w3-padding
-                    input(type='text', placeholder='Пошук...', style='width: 100%;', oninput='searchRecords()')
+                    input(type='text', placeholder='Пошук...', style='width: 100%;', oninput='searchRecords(this.value)')
 div.table-container.w3-display-container.w3-display-middle
     div.w3-table-all.w3-threequarter(style='max-height: 400px; overflow-y: auto;')
         table(style='width: 100%;; table-layout: fixed;')
